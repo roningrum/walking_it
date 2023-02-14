@@ -4,6 +4,9 @@ import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sensors_plus/sensors_plus.dart';
+import 'package:walking_it/progress_walking_bar.dart';
+import 'package:walking_it/sqflite/database_handler.dart';
+import 'package:walking_it/sqflite/walking.dart';
 
 // class simpan data x,y,z
 
@@ -23,6 +26,7 @@ class _WalkingAppState extends State<WalkingApp> {
   var lastAccel = 0.0;
   var stepCount = 0;
   var x= 0.0, y=0.0, z=0.0;
+  // late Walking walking;
 
   late Timer timer;
   StreamSubscription<AccelerometerEvent> ? eventListener;
@@ -32,14 +36,16 @@ class _WalkingAppState extends State<WalkingApp> {
   // eventListener = <StreamSubscription<dynamic>>[];
 
   final _streamSubscriptions = <StreamSubscription<dynamic>>[];
-  
+
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
     var yesterday = DateTime.now().subtract(const Duration(days: 1));
     var today = DateTime.now();
-    if(yesterday.isBefore(today)){
+    DatabaseHandler.initializeDB();
+
+    if(yesterday.isAfter(today)){
       stepCount = 0;
     }
     else{
@@ -48,29 +54,19 @@ class _WalkingAppState extends State<WalkingApp> {
   }
 
    void start() {
-    setState(() {
-      _streamSubscriptions.add(
-          userAccelerometerEvents.listen((UserAccelerometerEvent event) {
-            setState(() {
-              x = event.x;
-              y = event.y;
-              z = event.z;
-              hitungStep(x, y, z);
-            });
-          })
-      );
-
-    });
-  }
-
-  void stop(){
-    setState(() {
-      for (StreamSubscription<dynamic> subscription in _streamSubscriptions) {
-        subscription.cancel();
-      }
-    });
-
-  }
+     setState(() {
+       _streamSubscriptions.add(
+           userAccelerometerEvents.listen((UserAccelerometerEvent event) {
+             setState(() {
+               x = event.x;
+               y = event.y;
+               z = event.z;
+               hitungStep(x, y, z);
+             });
+           })
+       );
+     });
+   }
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +77,9 @@ class _WalkingAppState extends State<WalkingApp> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('Langkah yang di Hitung $stepCount'),
+            SizedBox(
+                width: 250.0,
+                child: WalkingProgressWidget(current: stepCount.toDouble(), max: 1000)),
             Switch(
              value: isSwitched,
               onChanged: (value){
@@ -122,7 +121,19 @@ class _WalkingAppState extends State<WalkingApp> {
     if(kDebugMode){
       print('nilai x :$x, nilai y: $y, nilai z: $z, step: $stepCount', );
     }
+  }
 
+  void stop(){
+    var walking = Walking();
+    walking.name = "User";
+    walking.langkah = stepCount;
+    walking.tgl = DateTime.now().toString();
+    DatabaseHandler.insertWalkingData(walking);
+    setState(() {
+      for (StreamSubscription<dynamic> subscription in _streamSubscriptions) {
+        subscription.cancel();
+      }
+    });
 
   }
 

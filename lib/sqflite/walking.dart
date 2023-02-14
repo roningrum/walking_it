@@ -1,10 +1,10 @@
 class Walking{
-  final int id;
-  final String name;
-  final int langkah;
-  final DateTime tgl;
+  int? id;
+  String? name;
+  int? langkah;
+  String? tgl;
 
-  Walking(this.id, this.name, this.langkah, this.tgl);
+  Walking({this.id, this.name, this.langkah, this.tgl});
 
   Walking.fromMap(Map<String, dynamic> res)
       : id = res["id"],
