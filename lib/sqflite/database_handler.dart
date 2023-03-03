@@ -1,5 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+import 'package:walking_it/sqflite/user.dart';
 import 'package:walking_it/sqflite/walking.dart';
 
 class DatabaseHandler{
@@ -14,6 +15,22 @@ class DatabaseHandler{
       },
       version: 1,
     );
+  }
+  //user
+  static Future<int> saveUserData(User user) async{
+    final Database db = await initializeDB();
+    final id = await db.insert('user', user.toMap(), conflictAlgorithm: ConflictAlgorithm.replace);
+    return id;
+  }
+
+  // untuk Login
+  static Future<User?> getLogin(String email, String password) async{
+    var dbClient = await initializeDB();
+    var res = await dbClient.rawQuery("SELECT * FROM user WHERE email = $email and password = $password");
+    if(res.length > 0){
+      return User.fromMap(res.first);
+    }
+    return null;
   }
 
   static Future<int> insertWalkingData(Walking walking) async{

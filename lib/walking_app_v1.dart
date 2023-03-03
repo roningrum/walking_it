@@ -41,11 +41,10 @@ class _WalkingAppState extends State<WalkingApp> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    var yesterday = DateTime.now().subtract(const Duration(days: 1));
     var today = DateTime.now();
     DatabaseHandler.initializeDB();
 
-    if(yesterday.isAfter(today)){
+    if(today.hour == 0){
       stepCount = 0;
     }
     else{
